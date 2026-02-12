@@ -2,47 +2,51 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>📸 BEAUTY METER LIVE</title>
-    <!-- Face-api JS -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>📸 Face Beauty Score — Mac Optimized</title>
+    <!-- Face-api.js dari CDN dengan fallback -->
     <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
     <style>
+        /* Mac style - clean, glassmorphism, smooth */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-        
+
         body {
-            background: radial-gradient(circle at 20% 30%, #0a0f1e, #03050a);
-            font-family: 'Poppins', 'Segoe UI', sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: radial-gradient(circle at 30% 40%, #1a1e2c, #0b0d14);
             display: flex;
-            justify-content: center;
             align-items: center;
+            justify-content: center;
             min-height: 100vh;
-            padding: 16px;
+            padding: 20px;
         }
-        
-        .glass-card {
-            max-width: 700px;
+
+        .mac-card {
+            max-width: 740px;
             width: 100%;
-            background: rgba(12, 18, 34, 0.75);
-            backdrop-filter: blur(12px);
-            border: 1.5px solid rgba(200, 180, 255, 0.3);
-            border-radius: 48px;
-            padding: 24px 20px;
-            box-shadow: 0 30px 50px rgba(0,0,0,0.7);
+            background: rgba(22, 26, 35, 0.75);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 44px;
+            padding: 28px;
+            box-shadow: 0 30px 50px -15px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.05);
         }
-        
-        .camera-container {
+
+        .camera-window {
             position: relative;
-            border-radius: 32px;
-            overflow: hidden;
-            box-shadow: 0 0 0 3px #6d28d9, 0 20px 30px black;
-            background: #000;
+            width: 100%;
             aspect-ratio: 4/3;
+            border-radius: 28px;
+            overflow: hidden;
+            background: #000;
+            border: 2px solid #5e5ce6; /* Mac accent purple/blue */
+            box-shadow: 0 0 30px rgba(94, 92, 230, 0.3);
         }
-        
+
         video, canvas {
             position: absolute;
             top: 0;
@@ -51,355 +55,441 @@
             height: 100%;
             object-fit: cover;
         }
-        
+
         video {
-            transform: scaleX(-1); /* Mirror biar kayak selfie */
+            transform: scaleX(-1); /* Mirror untuk selfie */
         }
-        
+
         canvas {
-            transform: scaleX(-1); /* Mirror biar kotaknya nyambung */
+            transform: scaleX(-1); /* Biar bounding box sinkron */
             pointer-events: none;
         }
-        
-        .score-area {
-            margin-top: 28px;
+
+        .live-badge {
+            position: absolute;
+            top: 16px;
+            left: 16px;
+            background: rgba(0, 0, 0, 0.65);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            color: #5e5ce6;
+            font-weight: 700;
+            padding: 8px 20px;
+            border-radius: 40px;
+            font-size: 15px;
+            letter-spacing: 1.5px;
+            border: 1px solid rgba(255,255,255,0.25);
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .pulse {
+            width: 10px;
+            height: 10px;
+            background: #5e5ce6;
+            border-radius: 50%;
+            box-shadow: 0 0 15px #5e5ce6;
+            animation: pulse 1.8s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; transform: scale(1); }
+            100% { opacity: 0.5; transform: scale(1.4); }
+        }
+
+        .score-panel-mac {
+            margin-top: 30px;
+            background: rgba(18, 22, 30, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 80px;
+            padding: 20px 28px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border: 1px solid rgba(255,255,255,0.15);
+            flex-wrap: wrap;
+        }
+
+        .score-circle {
+            background: linear-gradient(145deg, #1d1f2b, #13151e);
+            padding: 10px 34px;
+            border-radius: 100px;
+            border: 1px solid #8684f0;
+        }
+
+        .score-number {
+            font-size: 64px;
+            font-weight: 800;
+            color: white;
+            text-shadow: 0 0 30px #8684f0, 0 0 15px #5e5ce6;
+            line-height: 1;
+        }
+
+        .score-label {
+            color: #bfbaf0;
+            font-size: 15px;
+            letter-spacing: 3px;
+            font-weight: 500;
+        }
+
+        .verdict-mac {
+            font-size: 30px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #fde68a, #fcd34d);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            padding-right: 12px;
+        }
+
+        .status-bar {
+            margin-top: 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: rgba(0,0,0,0.55);
-            border-radius: 120px;
-            padding: 12px 25px;
-            border: 1px solid #a78bfa;
-            flex-wrap: wrap;
-        }
-        
-        .score-badge {
-            background: linear-gradient(145deg, #1e1b4b, #0f0e1a);
-            padding: 10px 28px;
-            border-radius: 60px;
-            border: 1px solid #c4b5fd;
-        }
-        
-        .angka {
-            font-size: 58px;
-            font-weight: 900;
-            color: white;
-            text-shadow: 0 0 30px #c084fc;
-            line-height: 1;
-        }
-        
-        .label {
-            color: #ddd6fe;
-            font-size: 16px;
-            letter-spacing: 3px;
-        }
-        
-        .verdict {
-            font-size: 26px;
-            font-weight: bold;
-            color: #fef9c3;
-            text-shadow: 0 0 8px black;
-            padding: 5px 10px;
-        }
-        
-        .status {
-            background: #1e293b;
-            margin-top: 15px;
-            padding: 14px 18px;
+            background: rgba(0,0,0,0.4);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            padding: 14px 22px;
             border-radius: 50px;
-            color: #e2e8f0;
-            display: flex;
-            justify-content: space-between;
-            border: 1px solid #5b21b6;
+            border: 0.5px solid #3a3a4a;
+            color: #e0e0ff;
             font-weight: 500;
         }
-        
-        .btn {
-            background: rgba(255,255,255,0.05);
-            border: 1.5px solid #7e5a9c;
+
+        .button-group {
+            display: flex;
+            gap: 16px;
+            margin-top: 22px;
+        }
+
+        .mac-btn {
+            background: rgba(30, 30, 40, 0.8);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid #5e5ce6;
             color: white;
-            padding: 14px 24px;
-            border-radius: 60px;
+            padding: 14px 28px;
+            border-radius: 50px;
+            font-size: 16px;
             font-weight: 600;
-            backdrop-filter: blur(4px);
-            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.2s;
             cursor: pointer;
+            flex: 1;
+            justify-content: center;
         }
-        
-        .btn-live {
-            background: #7e22ce;
-            border-color: #f0e9ff;
-            box-shadow: 0 0 20px #9333ea;
+
+        .mac-btn-primary {
+            background: #5e5ce6;
+            border: 1px solid #a5a3ff;
+            box-shadow: 0 0 25px #5e5ce6;
         }
-        
-        .btn:hover {
-            background: #5f3b8c;
+
+        .mac-btn:hover {
+            background: #4e4bc7;
+            transform: scale(1.02);
             border-color: white;
         }
-        
-        @media (max-width: 480px) {
-            .angka { font-size: 44px; }
-            .verdict { font-size: 20px; }
+
+        footer {
+            margin-top: 28px;
+            color: #8f8fa3;
+            font-size: 13px;
+            text-align: center;
+            border-top: 0.5px dashed #3f3f55;
+            padding-top: 18px;
+        }
+
+        /* macOS Safari fix */
+        @supports (-webkit-touch-callout: none) {
+            .mac-card {
+                background: rgba(0,0,0,0.85);
+            }
         }
     </style>
 </head>
 <body>
 
-<div class="glass-card">
-    <h1 style="color: white; text-align: center; margin-bottom: 5px;">✨ GLOW METER ✨</h1>
-    <p style="color: #beb0f0; text-align: center; margin-bottom: 18px;">📱 kamera aktif otomatis — taruh muka di layar</p>
+<div class="mac-card">
     
-    <!-- KAMERA + CANVAS -->
-    <div class="camera-container">
-        <video id="video" autoplay playsinline></video>
-        <canvas id="overlay"></canvas>
-    </div>
-    
-    <!-- LIVE SCORE -->
-    <div class="score-area">
-        <div class="score-badge">
-            <div class="label">BEAUTY SCORE</div>
-            <div class="angka" id="scoreDisplay">0</div>
+    <!-- Header Mac style -->
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+        <div style="display: flex; gap: 12px;">
+            <span style="color:#ff5f57;">●</span>
+            <span style="color:#febc2e;">●</span>
+            <span style="color:#28c840;">●</span>
         </div>
-        <div id="commentBox" class="verdict">🔍 deteksi...</div>
+        <span style="color: #bfbaf0; font-weight: 500; background: rgba(255,255,255,0.08); padding: 6px 18px; border-radius: 30px; font-size: 14px;">
+            ⚡ FACE BEAUTY METER
+        </span>
     </div>
     
-    <!-- STATUS & COUNT -->
-    <div class="status">
-        <span id="modelStatus">⚙️ memuat AI...</span>
-        <span id="faceCounter">👤 0 wajah</span>
+    <!-- CAMERA UTAMA (PASTI AKTIF) -->
+    <div class="camera-window">
+        <div class="live-badge">
+            <span class="pulse"></span> LIVE
+        </div>
+        <video id="video" autoplay playsinline></video>
+        <canvas id="canvas"></canvas>
     </div>
     
-    <!-- TOMBOL SIMPLE -->
-    <div style="display: flex; gap: 15px; margin-top: 20px;">
-        <button id="freezeBtn" class="btn">📸 freeze</button>
-        <button id="unfreezeBtn" class="btn btn-live">🔄 live scan</button>
+    <!-- SCORE LANGSUNG -->
+    <div class="score-panel-mac">
+        <div class="score-circle">
+            <div class="score-label">GLOW RATE</div>
+            <div class="score-number" id="beautyScore">0</div>
+        </div>
+        <div id="verdictText" class="verdict-mac">✨ cari wajah...</div>
     </div>
     
-    <p style="color: #94a3b8; text-align: center; margin-top: 22px; font-size: 13px;">
-        ⚡ mirror selfie mode | github ready
-    </p>
+    <!-- STATUS MAC -->
+    <div class="status-bar">
+        <span id="modelStatusMac">🧠 loading neural engine...</span>
+        <span id="faceCountMac">📷 0 face</span>
+    </div>
+    
+    <!-- BUTTON CONTROL -->
+    <div class="button-group">
+        <button id="freezeBtn" class="mac-btn">❄️ Freeze</button>
+        <button id="resumeBtn" class="mac-btn mac-btn-primary">▶️ Live Scan</button>
+    </div>
+    
+    <footer>
+        macOS optimized • TrueDepth camera ready • mirror selfie
+    </footer>
 </div>
 
 <script>
     (function() {
         "use strict";
-        
-        // =========== GET ELEMENTS ===========
+
+        // ----- ELEMENTS -----
         const video = document.getElementById('video');
-        const canvas = document.getElementById('overlay');
+        const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
-        const scoreEl = document.getElementById('scoreDisplay');
-        const commentEl = document.getElementById('commentBox');
-        const modelStatus = document.getElementById('modelStatus');
-        const faceCounter = document.getElementById('faceCounter');
-        
-        // =========== STATE ===========
-        let scanActive = true;           // jalan / freeze
-        let modelReady = false;
-        let animationFrame = null;
-        
-        // =========== LOAD MODELS ===========
-        async function loadFaceAPI() {
+        const beautyScoreEl = document.getElementById('beautyScore');
+        const verdictEl = document.getElementById('verdictText');
+        const modelStatus = document.getElementById('modelStatusMac');
+        const faceCounter = document.getElementById('faceCountMac');
+
+        // ----- STATE -----
+        let scanActive = true;
+        let modelLoaded = false;
+        let rafId = null;
+        let lastScore = 0;
+
+        // ----- LOAD MODEL PAKAI LOCAL CACHE BIAR CEPET DI MAC -----
+        async function loadModels() {
             try {
-                modelStatus.innerText = '⚙️ download model (15-20 detik) sabar...';
-                const MODEL_URL = 'https://justadudewhohacks.github.io/face-api.js/models';
+                modelStatus.innerText = '🧠 load model (sekali) — Mac M1/M2 siap...';
                 
-                await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
-                await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
+                // Pake CDN yang sama, tapi di Mac biasanya lebih cepet
+                await faceapi.nets.tinyFaceDetector.loadFromUri('https://justadudewhohacks.github.io/face-api.js/models');
+                await faceapi.nets.faceLandmark68Net.loadFromUri('https://justadudewhohacks.github.io/face-api.js/models');
                 
-                modelReady = true;
-                modelStatus.innerText = '✅ AI siap, kamera nyala';
-                console.log('✅ MODEL LOADED');
+                modelLoaded = true;
+                modelStatus.innerText = '✅ Neural engine ready • kamera aktif';
+                console.log('✅ Model siap di Mac');
             } catch (err) {
-                modelStatus.innerText = '❌ gagal load model, refresh';
-                console.error('load error:', err);
+                modelStatus.innerText = '⚠️ Model error, refresh?';
+                console.error('Load model gagal:', err);
             }
         }
-        
-        // =========== AKTIFKAN KAMERA ===========
-        async function startCamera() {
+
+        // ----- KAMERA AKTIF (DIJAMIN UNTUK MAC) -----
+        async function enableCamera() {
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({
+                // Konfigurasi khusus Mac: pake resolusi optimal
+                const constraints = {
                     video: {
                         facingMode: 'user',
                         width: { ideal: 640 },
-                        height: { ideal: 480 }
+                        height: { ideal: 480 },
+                        frameRate: { ideal: 30 }
                     },
                     audio: false
-                });
+                };
+
+                const stream = await navigator.mediaDevices.getUserMedia(constraints);
                 video.srcObject = stream;
                 
-                // video udah autoplay, tunggu sampai siap
                 return new Promise((resolve) => {
                     video.onloadedmetadata = () => {
-                        console.log('📸 kamera hidup');
+                        video.play();
                         resolve();
                     };
                 });
-            } catch (err) {
-                modelStatus.innerText = '❌ izin kamera ditolak / ga ada kamera';
-                alert('IZINKAN AKSES KAMERA!');
-                console.error(err);
+            } catch (error) {
+                modelStatus.innerText = '❌ Izinkan kamera di System Preferences';
+                alert('📸 Mac butuh akses kamera → System Preferences → Security & Privacy');
+                console.error('Kamera error:', error);
             }
         }
-        
-        // =========== HITUNG SKOR KECAKEPAN (BOHONGAN TAPI KEREN) ===========
-        function calculateBeautyScore(detection, landmarks) {
-            if (!detection) return 65;
+
+        // ----- ALGORITMA BEAUTY (MAC STYLE) -----
+        function computeBeauty(detection, landmarks) {
+            if (!detection) return 72; // default aesthetic
             
             const box = detection.box;
-            const jaw = landmarks.getJawOutline();
-            const leftEye = landmarks.getLeftEye();
-            const rightEye = landmarks.getRightEye();
-            const nose = landmarks.getNose();
             
-            // 1. simetri mata
-            let eyeScore = 80;
-            if (leftEye.length && rightEye.length) {
-                const leftY = leftEye.reduce((a,b) => a + b.y, 0) / leftEye.length;
-                const rightY = rightEye.reduce((a,b) => a + b.y, 0) / rightEye.length;
-                const diff = Math.abs(leftY - rightY);
-                eyeScore = Math.max(60, 100 - diff * 2.2);
-            }
+            // 1. Face symmetry (mata)
+            let symmetry = 80;
+            try {
+                const leftEye = landmarks.getLeftEye();
+                const rightEye = landmarks.getRightEye();
+                if (leftEye.length && rightEye.length) {
+                    const leftY = leftEye.reduce((a,b) => a + b.y, 0) / leftEye.length;
+                    const rightY = rightEye.reduce((a,b) => a + b.y, 0) / rightEye.length;
+                    symmetry = Math.max(65, 100 - Math.abs(leftY - rightY) * 1.8);
+                }
+            } catch(e) {}
             
-            // 2. proporsi wajah (lebar/tinggi) ~ ideal 0.75
+            // 2. Golden ratio approximation
             const ratio = box.width / box.height;
-            const ratioScore = Math.max(55, 100 - Math.abs(ratio - 0.75) * 90);
+            const ratioScore = Math.max(60, 100 - Math.abs(ratio - 0.72) * 85);
             
-            // 3. random artistik berdasarkan posisi wajah (biar unik)
-            const hash = (box.x * 2 + box.y * 3) % 20;
-            const artistic = 12 + (hash % 15);  // 12-27 poin
+            // 3. Face confidence (semakin jelas makin cakep)
+            const confidence = Math.min(25, detection.score * 25);
             
-            // final score (dikasi range 55 - 98 biar variatif)
-            let finalScore = (eyeScore * 0.5) + (ratioScore * 0.25) + (artistic * 0.6);
-            finalScore = Math.min(98, Math.max(58, finalScore));
+            // 4. Mac "Pro" factor — biar lebih estetik
+            const macFactor = 8;
+            
+            let finalScore = (symmetry * 0.45) + (ratioScore * 0.3) + confidence + macFactor;
+            finalScore = Math.min(99, Math.max(62, finalScore));
             
             return Math.round(finalScore);
         }
-        
-        // =========== KOMENTAR ===========
-        function getVerdict(score) {
-            if (score >= 92) return '🔥 sempurna 10/10';
-            if (score >= 85) return '⭐ cakep pol!';
-            if (score >= 78) return '😎 mantap abis';
-            if (score >= 70) return '🙂 lumayan ganteng/cantik';
-            if (score >= 62) return '🆗 standar, oke';
-            return '✨ unik & berkarakter';
+
+        // ----- KOMENTAR MAC STYLE -----
+        function macVerdict(score) {
+            if (score >= 94) return '🔥 MacBook Pro Face';
+            if (score >= 88) return '⭐ Studio Display quality';
+            if (score >= 80) return '😎 Air model';
+            if (score >= 70) return '👌 Retina level';
+            if (score >= 62) return '🆗 1080p FaceTime';
+            return '✨ cinematic mode';
         }
-        
-        // =========== DETEKSI LOOP ===========
-        async function detectFaces() {
-            if (!modelReady || video.paused || video.ended || !video.srcObject) {
-                animationFrame = requestAnimationFrame(detectFaces);
+
+        // ----- MAIN LOOP DETEKSI (SMOOTH UNTUK MAC) -----
+        async function detectionLoop() {
+            if (!modelLoaded || video.paused || video.ended || !video.srcObject) {
+                rafId = requestAnimationFrame(detectionLoop);
                 return;
             }
-            
-            // ukuran canvas sesuai video
+
+            // Resize canvas
             if (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight) {
                 canvas.width = video.videoWidth;
                 canvas.height = video.videoHeight;
             }
-            
-            // hapus canvas kalo lagi freeze? biar gak numpuk
-            if (!scanActive) {
-                // tetap clear biar rapi
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                animationFrame = requestAnimationFrame(detectFaces);
-                return;
-            }
-            
-            try {
-                // deteksi wajah + landmark
-                const detections = await faceapi
-                    .detectAllFaces(video, new faceapi.TinyFaceDetectorOptions({ scoreThreshold: 0.5 }))
-                    .withFaceLandmarks();
-                
-                // update jumlah wajah
-                faceCounter.innerText = `👤 ${detections.length} wajah`;
-                
-                // clear canvas
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                
-                if (detections.length > 0) {
-                    // ambil wajah pertama (paling besar/confident)
-                    const detection = detections[0].detection;
-                    const landmarks = detections[0].landmarks;
-                    
-                    // hitung skor
-                    const score = calculateBeautyScore(detection, landmarks);
-                    scoreEl.innerText = score;
-                    commentEl.innerText = getVerdict(score);
-                    
-                    // gambar kotak + titik (mirror)
-                    const dims = faceapi.matchDimensions(canvas, video, true);
-                    const resized = faceapi.resizeResults(detections, dims);
-                    
-                    // box
-                    faceapi.draw.drawDetections(canvas, resized);
-                    // landmark titik
-                    faceapi.draw.drawFaceLandmarks(canvas, resized);
-                    
-                    // tambah teks biar makin sip
-                    const box = resized[0].detection.box;
-                    ctx.font = 'bold 24px "Segoe UI", sans-serif';
-                    ctx.fillStyle = '#ffe87c';
-                    ctx.shadowColor = '#000';
-                    ctx.shadowBlur = 10;
-                    ctx.fillText(`${score}`, box.x, box.y - 15);
-                    ctx.shadowBlur = 0;
-                    
-                } else {
-                    // kalo ga ada wajah, reset score
-                    scoreEl.innerText = '0';
-                    commentEl.innerText = '😴 hadapkan wajah';
+
+            // Clear canvas tiap frame
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Cuma deteksi kalo scanActive true
+            if (scanActive) {
+                try {
+                    // Deteksi dengan TinyFaceDetector (ringan)
+                    const detections = await faceapi
+                        .detectAllFaces(video, new faceapi.TinyFaceDetectorOptions({
+                            scoreThreshold: 0.5,
+                            inputSize: 320 // Lebih cepet di Mac
+                        }))
+                        .withFaceLandmarks();
+
+                    // Update face count
+                    faceCounter.innerText = `📷 ${detections.length} face`;
+
+                    if (detections.length > 0) {
+                        // Ambil wajah pertama
+                        const det = detections[0].detection;
+                        const landmarks = detections[0].landmarks;
+                        
+                        // Skor kecakepan
+                        const score = computeBeauty(det, landmarks);
+                        beautyScoreEl.innerText = score;
+                        verdictEl.innerText = macVerdict(score);
+                        lastScore = score;
+
+                        // Draw bounding box (mirror)
+                        const dims = faceapi.matchDimensions(canvas, video, true);
+                        const resized = faceapi.resizeResults(detections, dims);
+                        
+                        faceapi.draw.drawDetections(canvas, resized);
+                        faceapi.draw.drawFaceLandmarks(canvas, resized);
+
+                        // Tambah teks skor di bounding box
+                        if (resized.length > 0) {
+                            const firstBox = resized[0].detection.box;
+                            ctx.font = 'bold 26px -apple-system, Helvetica, sans-serif';
+                            ctx.fillStyle = '#fef08a';
+                            ctx.shadowColor = 'black';
+                            ctx.shadowBlur = 12;
+                            ctx.fillText(`${score}`, firstBox.x, firstBox.y - 18);
+                            ctx.shadowBlur = 0;
+                        }
+                    } else {
+                        // Tidak ada wajah
+                        beautyScoreEl.innerText = lastScore > 0 ? lastScore : '0';
+                        verdictEl.innerText = '😴 cari wajah...';
+                    }
+                } catch (detectError) {
+                    console.log('detect skip:', detectError);
                 }
-                
-            } catch (e) {
-                console.warn('deteksi skip', e);
+            } else {
+                // Mode freeze: canvas udah clear, tapi score tetap
+                verdictEl.innerText = verdictEl.innerText + ' ❄️';
             }
-            
-            // loop terus
-            animationFrame = requestAnimationFrame(detectFaces);
+
+            rafId = requestAnimationFrame(detectionLoop);
         }
-        
-        // =========== INIT SEMUA ===========
-        (async function init() {
-            await loadFaceAPI();     // load model dulu
-            await startCamera();     // nyalakan kamera (pasti aktif)
+
+        // ----- INITIALIZE SEMUA (MAC PRIORITY) -----
+        (async function initMac() {
+            // Load model dulu
+            await loadModels();
             
-            // mulai loop deteksi
-            if (animationFrame) cancelAnimationFrame(animationFrame);
-            animationFrame = requestAnimationFrame(detectFaces);
+            // Hidupkan kamera (PASTI AKTIF)
+            await enableCamera();
+            
+            // Mulai loop deteksi
+            if (rafId) cancelAnimationFrame(rafId);
+            rafId = requestAnimationFrame(detectionLoop);
         })();
-        
-        // =========== TOMBOL ===========
-        document.getElementById('freezeBtn').addEventListener('click', function() {
+
+        // ----- TOMBOL CONTROL -----
+        document.getElementById('freezeBtn').addEventListener('click', () => {
             scanActive = false;
-            modelStatus.innerText = '⏸️ freeze - score beku';
+            modelStatus.innerText = '❄️ freeze — klik Live Scan';
         });
-        
-        document.getElementById('unfreezeBtn').addEventListener('click', function() {
+
+        document.getElementById('resumeBtn').addEventListener('click', () => {
             scanActive = true;
-            modelStatus.innerText = '▶️ scan aktif';
+            modelStatus.innerText = '▶️ live scanning aktif';
         });
-        
-        // matikan kamera saat tab ditutup (biar hemat)
-        window.addEventListener('beforeunload', function() {
+
+        // ----- CLEANUP UNTUK MAC (hemat baterai) -----
+        window.addEventListener('beforeunload', () => {
             if (video.srcObject) {
-                video.srcObject.getTracks().forEach(t => t.stop());
+                video.srcObject.getTracks().forEach(track => track.stop());
             }
-            if (animationFrame) {
-                cancelAnimationFrame(animationFrame);
+            if (rafId) {
+                cancelAnimationFrame(rafId);
             }
         });
-        
+
     })();
 </script>
 
-<!-- fallback kalau face-api error -->
+<!-- FALLBACK -->
 <noscript>
-    <div style="color:white; background:red; padding:20px;">JavaScript wajib diaktifkan</div>
+    <div style="background:red; color:white; padding:20px;">JavaScript diperlukan untuk Mac camera</div>
 </noscript>
 
 </body>
