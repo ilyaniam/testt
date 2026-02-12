@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Face Beauty Score Meter</title>
+    <!-- Face-api.js untuk deteksi wajah -->
+    <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(145deg, #0b0c1a 0%, #1a1e30 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 700px;
+            width: 100%;
+            background: rgba(18, 22, 40, 0.8);
+            backdrop-filter: blur(12px);
+            border-radius: 40px;
+            padding: 30px 25px;
+            box-shadow: 0 25px 40px rgba(0,0,0,0.6);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        h1 {
+            color: #f0e9ff;
+            font-weight: 600;
+            font-size: 2rem;
+            letter-spacing: 2px;
+            text-align: center;
+            text-shadow: 0 0 10px #b794f4;
+            margin-bottom: 8px;
+        }
+
+        .sub {
+            color: #cbd5e0;
+            text-align: center;
+            margin-bottom: 30px;
+            font-style: italic;
+            border-bottom: 1px dashed #4a5568;
+            padding-bottom: 15px;
+        }
+
+        .video-section {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            border-radius: 28px;
+            overflow: hidden;
+            background: #05070a;
+            box-shadow: 0 0 0 2px rgba(159, 122, 234, 0.3), 0 15px 30px -10px black;
+        }
+
+        #videoElement {
+            width: 100%;
+            height: auto;
+            display: block;
+            border-radius: 26px;
+            transform: scaleX(-1); /* Mirror effect */
+        }
+
+        #canvasOverlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            transform: scaleX(-1); /* Sync mirror */
+        }
+
+        .score-panel {
+            margin-top: 30px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 60px;
+            padding: 22px 25px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            backdrop-filter: blur(8px);
+            border: 1px solid #3c366b;
+            flex-wrap: wrap;
+        }
+
+        .score-box {
+            background: radial-gradient(circle at 20% 30%, #2d3748, #1a202c);
+            padding: 10px 24px;
+            border-radius: 50px;
+            border: 1px solid #9f7aea;
+            box-shadow: 0 0 15px #805ad5;
+        }
+
+        .score-label {
+            font-size: 1rem;
+            color: #e9d8fd;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+
+        .score-number {
+            font-size: 3.2rem;
+            font-weight: 800;
+            color: white;
+            line-height: 1;
+            text-shadow: 0 0 25px #d6bcfa;
+        }
+
+        .score-comment {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #ffeaa5;
+            padding-right: 10px;
+        }
+
+        .status {
+            color: #a0aec0;
+            font-size: 1rem;
+            background: #2d3748;
+            padding: 10px 18px;
+            border-radius: 30px;
+            display: inline-block;
+            border: 1px solid #718096;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid #a0aec0;
+            color: white;
+            padding: 12px 28px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            backdrop-filter: blur(4px);
+            transition: 0.2s;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-primary {
+            background: #6b46c1;
+            border-color: #b794f4;
+            box-shadow: 0 0 20px #553c9a;
+        }
+
+        .btn:hover {
+            background: #5a67d8;
+            border-color: #cbd5e0;
+            transform: scale(1.05);
+        }
+
+        footer {
+            margin-top: 30px;
+            color: #718096;
+            font-size: 0.85rem;
+            text-align: center;
+        }
+
+        @media (max-width: 480px) {
+            .container { padding: 20px 15px; }
+            .score-number { font-size: 2.5rem; }
+            .score-comment { font-size: 1.1rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>✨ BEAUTY SCAN ✨</h1>
+        <div class="sub">📸 ukur level kecakepan wajah real-time</div>
+
+        <!-- Area Kamera -->
+        <div class="video-section">
+            <video id="videoElement" autoplay playsinline></video>
+            <canvas id="canvasOverlay"></canvas>
+        </div>
+
+        <!-- Skor & Predikat -->
+        <div class="score-panel">
+            <div class="score-box">
+                <div class="score-label">beauty score</div>
+                <div class="score-number" id="beautyScore">0</div>
+            </div>
+            <div id="verdict" class="score-comment">🔍 scan wajah...</div>
+        </div>
+
+        <!-- Status Deteksi -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 18px;">
+            <span id="faceStatus" class="status">⏳ memuat model...</span>
+            <span id="faceCount" class="status">👤 0 wajah terdeteksi</span>
+        </div>
+
+        <!-- Tombol Kontrol -->
+        <div class="btn-group">
+            <button id="snapshotBtn" class="btn">📸 freeze score</button>
+            <button id="resetBtn" class="btn btn-primary">🔄 lanjutkan scan</button>
+        </div>
+        <footer>🎭 mirror mode | model face-api.js | github ready</footer>
+    </div>
+
+    <script>
+        (async function() {
+            // ========== SETUP VARIABLES ==========
+            const video = document.getElementById('videoElement');
+            const canvas = document.getElementById('canvasOverlay');
+            const ctx = canvas.getContext('2d');
+            const beautyScoreEl = document.getElementById('beautyScore');
+            const verdictEl = document.getElementById('verdict');
+            const faceStatusEl = document.getElementById('faceStatus');
+            const faceCountEl = document.getElementById('faceCount');
+
+            let scanActive = true;      // untuk freeze / resume
+            let requestId = null;
+            let modelsLoaded = false;
+
+            // ========== LOAD FACE-API MODELS ==========
+            faceStatusEl.innerText = '⏳ download model AI... (sekali aja)';
+            const MODEL_URL = 'https://justadudewhohacks.github.io/face-api.js/models';
+
+            try {
+                await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+                await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
+                await faceapi.nets.ageGenderNet.loadFromUri(MODEL_URL); // optional, tapi kita improvisasi
+                modelsLoaded = true;
+                faceStatusEl.innerText = '✅ model siap, nyalakan kamera';
+            } catch (err) {
+                console.error('gagal load model:', err);
+                faceStatusEl.innerText = '❌ error load model. refresh';
+                return;
+            }
+
+            // ========== MULAI KAMERA ==========
+            async function startVideo() {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({
+                        video: {
+                            width: { ideal: 640 },
+                            height: { ideal: 480 },
+                            facingMode: 'user'
+                        }
+                    });
+                    video.srcObject = stream;
+                } catch (err) {
+                    faceStatusEl.innerText = '❌ tidak bisa akses kamera';
+                    console.error(err);
+                }
+            }
+            await startVideo();
+
+            // ========== UTILITIES ==========
+            function computeBeautyScore(detection, landmarks) {
+                if (!detection || !landmarks) return 0;
+                
+                // ---- ALGORITMA KECAKEPAN (HIBURAN SEMATA) ----
+                // Ini pure fun & imaginatif, menggunakan simetri, proporsi wajah, dan random artistik
+                
+                const box = detection._box;
+                const jawPoints = landmarks.getJawOutline();            // 17 titik rahang
+                const leftEye = landmarks.getLeftEye();
+                const rightEye = landmarks.getRightEye();
+                const nose = landmarks.getNose();
+                
+                // 1. Simetri mata (posisi Y)
+                if (leftEye.length < 1 || rightEye.length < 1) return 65;
+                const leftEyeY = leftEye.reduce((sum, p) => sum + p.y, 0) / leftEye.length;
+                const rightEyeY = rightEye.reduce((sum, p) => sum + p.y, 0) / rightEye.length;
+                const eyeSymmetry = Math.max(0, 100 - Math.abs(leftEyeY - rightEyeY) * 1.8);
+                
+                // 2. Proporsi wajah (lebar / tinggi) — ideal ~0.75 (wajah oval)
+                const faceWidth = box.width;
+                const faceHeight = box.height;
+                let whRatio = (faceWidth / faceHeight);
+                let ratioScore = 100 - Math.abs(whRatio - 0.75) * 100; 
+                ratioScore = Math.min(100, Math.max(40, ratioScore));
+                
+                // 3. Fitur hidung / mulut (random, biar seru)
+                const noseBridge = nose.length > 3 ? (nose[3].y - nose[0].y) : 20;
+                const noseScore = Math.min(30, noseBridge / 2);
+                
+                // 4. Random artistic (biar tiap orang dapet skor unik) — tapi konsisten per frame
+                const hash = box.x * box.y + box.width * box.height;
+                const artistic = ((hash % 15) + 85) * 0.2; // 17 ~ 20 poin
+    
+                // gabungin, range 50 - 100 biar lebih menarik
+                let rawScore = (eyeSymmetry * 0.45) + (ratioScore * 0.3) + (noseScore * 0.5) + artistic;
+                rawScore = Math.min(99, Math.max(50, rawScore));
+                
+                return Math.floor(rawScore * 100) / 100; // 2 desimal
+            }
+
+            function getBeautyComment(score) {
+                if (score >= 92) return '🔥 ganteng/cakep bangeet!';
+                if (score >= 85) return '⭐ very hot!';
+                if (score >= 78) return '😎 kereen, almost perfect';
+                if (score >= 70) return '🙂 oke, menarik';
+                if (score >= 60) return '🆗 standar, masih oke';
+                return '👌 unik, ada pesona sendiri';
+            }
+
+            // ========== DRAW AND DETECT ==========
+            async function detectAndScore() {
+                if (!modelsLoaded || video.paused || video.ended || !video.srcObject) {
+                    requestId = requestAnimationFrame(detectAndScore);
+                    return;
+                }
+
+                // Sesuaikan ukuran canvas dengan video
+                if (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight) {
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                }
+
+                // Hanya deteksi jika scan aktif (tidak freeze)
+                if (scanActive) {
+                    try {
+                        // Deteksi wajah dengan landmark
+                        const detections = await faceapi.detectAllFaces(video, 
+                            new faceapi.TinyFaceDetectorOptions({ scoreThreshold: 0.5 }))
+                            .withFaceLandmarks();
+                        
+                        // Update jumlah wajah
+                        faceCountEl.innerText = `👤 ${detections.length} wajah terdeteksi`;
+
+                        // Gambar overlay (kotak + titik landmark) hanya jika ada wajah
+                        ctx.clearRect(0, 0, canvas.width, canvas.height);
+                        
+                        if (detections.length > 0) {
+                            // Ambil wajah pertama (yang paling dominant)
+                            const detection = detections[0].detection;
+                            const landmarks = detections[0].landmarks;
+                            
+                            // Hitung skor kecakepan
+                            const score = computeBeautyScore(detection, landmarks);
+                            
+                            // Tampilkan ke UI (hanya jika masih aktif)
+                            if (scanActive) {
+                                beautyScoreEl.innerText = Math.round(score);
+                                verdictEl.innerText = getBeautyComment(score);
+                            }
+
+                            // Draw bounding box dan titik landmark (mirror aware)
+                            const dims = faceapi.matchDimensions(canvas, video, true);
+                            const resizedDetection = faceapi.resizeResults(detections, dims);
+                            
+                            // gambar box
+                            faceapi.draw.drawDetections(canvas, resizedDetection);
+                            // gambar landmark
+                            faceapi.draw.drawFaceLandmarks(canvas, resizedDetection);
+                            
+                            // tambahan teks skor di canvas (gak wajib, cuma buat seru)
+                            const firstBox = resizedDetection[0].detection.box;
+                            ctx.font = 'bold 22px "Segoe UI", sans-serif';
+                            ctx.fillStyle = '#ffeaa5';
+                            ctx.shadowColor = 'black';
+                            ctx.shadowBlur = 8;
+                            ctx.fillText(`✨ ${Math.round(score)}`, firstBox.x, firstBox.y - 12);
+                            ctx.shadowBlur = 0;
+                        } else {
+                            // tidak ada wajah, reset score?
+                            if (scanActive) {
+                                beautyScoreEl.innerText = '0';
+                                verdictEl.innerText = '😴 cari wajah...';
+                            }
+                            ctx.clearRect(0, 0, canvas.width, canvas.height);
+                        }
+                    } catch (error) {
+                        console.warn('deteksi error:', error);
+                    }
+                } else {
+                    // freeze mode: biarin canvas tetap ada, jangan clear, jangan update score
+                    // Tapi tetap clear biar ga numpuk? Biarkan saja frozen.
+                }
+
+                requestId = requestAnimationFrame(detectAndScore);
+            }
+
+            // Jalankan loop deteksi setelah video siap
+            video.addEventListener('play', () => {
+                requestId = requestAnimationFrame(detectAndScore);
+            });
+
+            // ========== TOMBOL ==========
+            document.getElementById('snapshotBtn').addEventListener('click', () => {
+                if (!scanActive) return; // sudah freeze
+                scanActive = false;
+                faceStatusEl.innerText = '⏸️ score di-freeze (foto mode)';
+            });
+
+            document.getElementById('resetBtn').addEventListener('click', () => {
+                scanActive = true;
+                faceStatusEl.innerText = '✅ scan aktif';
+                // langsung reset comment bisa
+            });
+
+            // cleanup saat pindah halaman
+            window.addEventListener('beforeunload', () => {
+                if (requestId) cancelAnimationFrame(requestId);
+                if (video.srcObject) {
+                    video.srcObject.getTracks().forEach(track => track.stop());
+                }
+            });
+        })();
+    </script>
+</body>
+</html>
